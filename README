@@ -1,0 +1,64 @@
+Overview
+--------
+This project provides an interface to communicate with the Thalmic Myo,
+providing the ability to scan for and connect to a nearby Myo, and giving access
+to data from the EMG sensors and the IMU.
+
+The code has been run extensively on Linux and a little bit on Windows. It will
+likely work on MacOS.
+
+Requirements
+------------
+python >=2.6
+pySerial
+numpy and pygame, for the example visualization and classifier program
+sklearn, for a more efficient classifier (and easy access to smarter classifiers)
+
+Dongle device name
+------------------
+To use these programs, you'll need to know the name of the device corresponding
+to the Myo dongle. On Linux, it will probably show up as /dev/ttyACM0 (possibly
+with another small number instead of 0). On Windows, it will probably be COM1
+(possibly with a different small number instead of 1). On Mac, it may be
+something starting with /dev/tty.usb, but I'm not sure.
+
+myo.py (basic Myo library)
+--------------------------
+myo.py contains the Myo class, which implements the main part of the
+communication protocol with a Myo. If run as a standalone script with the dongle
+device as a command-line argument, it provides a graphical display of EMG
+readings as they come in. (Interestingly, it seems that the Myo actually returns
+only raw data, not poses, and that classification is done on the computer.) You
+can also press 1, 2, or 3 on the keyboard to make the Myo perform a short,
+medium, or long vibration.
+
+classify_myo.py (example pose classification program)
+-----------------------------------------------------
+classify_myo.py contains a very basic pose classifier that uses the EMG
+readings. Run it with the dongle device as a command-line argument. You have to
+train it yourself; make up your own poses and assign numbers (0-9) to them; as
+long as a number key is held down, the current EMG readings will be recorded as
+belonging to the pose of that number. Any time a new reading comes in, the
+program compares it against the stored values to determine which pose it looks
+most like. The screen displays the number of samples currently labeled as
+belonging to each pose, and a histogram displaying the classifications of the
+last 25 inputs. The most common classification among the last 25 is shown in
+green and should be taken as the program's best estimate of the current
+pose. This method works well as long as the Myo isn't moved, but, in my
+experience, it takes quite a large amount of training data to handle different
+positions at all reasonably. Of course, the classifier could be made much, much
+smarter, but I haven't had the chance to tinker with it yet.
+
+Tips for classification:
+
+- make sure to only press the number keys while the pose is being held, not
+  while your hand is moving to or from the pose
+- try moving your hand around a little in the pose while recording data to give
+  the program a more flexible idea of what the pose is
+- the rest pose needs to be trained as a pose in itself
+
+
+
+Thanks to Jeff Rowberg's example bglib implementations
+(https://github.com/jrowberg/bglib/), which helped me get started with
+understanding the protocol.
