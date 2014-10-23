@@ -298,17 +298,25 @@ def plot(scr, vals):
     last_vals = vals
 
 if __name__ == '__main__':
-    import pygame
-    from pygame.locals import *
+    try:
+        import pygame
+        from pygame.locals import *
+        HAVE_PYGAME = True
+    except ImportError:
+        HAVE_PYGAME = False
 
-    w, h = 1200, 400
-    scr = pygame.display.set_mode((w, h))
+    if HAVE_PYGAME:
+        w, h = 1200, 400
+        scr = pygame.display.set_mode((w, h))
 
     m = Myo(sys.argv[1] if len(sys.argv) >= 2 else None)
 
     def proc_emg(emg, moving, times=[]):
-        ## update pygame display
-        plot(scr, [e / 2000. for e in emg])
+        if HAVE_PYGAME:
+            ## update pygame display
+            plot(scr, [e / 2000. for e in emg])
+        else:
+            print(emg)
 
         ## print framerate of received data
         times.append(time.time())
@@ -323,11 +331,12 @@ if __name__ == '__main__':
         while True:
             m.run()
 
-            for ev in pygame.event.get():
-                if ev.type == KEYDOWN:
-                    if 49 <= ev.key < 52:
-                        m.vibrate(ev.key - 48)
-                elif ev.type == QUIT: raise KeyboardInterrupt()
+            if HAVE_PYGAME:
+                for ev in pygame.event.get():
+                    if ev.type == KEYDOWN:
+                        if 49 <= ev.key < 52:
+                            m.vibrate(ev.key - 48)
+                    elif ev.type == QUIT: raise KeyboardInterrupt()
 
     except KeyboardInterrupt:
         pass

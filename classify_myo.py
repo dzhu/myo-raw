@@ -6,10 +6,6 @@ import sys
 import time
 
 import numpy as np
-import pygame
-from pygame.locals import *
-
-pygame.init()
 
 try:
     from sklearn import neighbors, svm
@@ -87,8 +83,18 @@ class Handler(object):
         self.history.append(y)
 
 if __name__ == '__main__':
-    w, h = 1200, 400
-    scr = pygame.display.set_mode((w, h))
+    try:
+        import pygame
+        from pygame.locals import *
+        HAVE_PYGAME = True
+    except ImportError:
+        HAVE_PYGAME = False
+
+    if HAVE_PYGAME:
+        pygame.init()
+        w, h = 800, 320
+        scr = pygame.display.set_mode((w, h))
+        font = pygame.font.Font(None, 30)
 
     m = myo.Myo(sys.argv[1] if len(sys.argv) >= 2 else None)
     hnd = Handler(Classifier())
@@ -96,47 +102,52 @@ if __name__ == '__main__':
     m.add_emg_handler(hnd)
     m.connect()
 
-    font = pygame.font.Font(None, 30)
-
     try:
         while True:
             m.run()
-            # data = np.random.uniform(0, 65536, size=8).astype(np.uint16)
-            # hnd(data, 0)
-            # time.sleep(.02)
 
-            for ev in pygame.event.get():
-                if ev.type == QUIT or (ev.type == KEYDOWN and ev.unicode == 'q'):
-                    raise KeyboardInterrupt()
-                elif ev.type == KEYDOWN:
-                    if 48 <= ev.key < 58:
-                        hnd.recording = ev.key - 48
-                    elif ev.unicode == 'r':
-                        hnd.cl.read_data()
-                elif ev.type == KEYUP:
-                    if 48 <= ev.key < 58:
-                        hnd.recording = -1
-
-            scr.fill((0, 0, 0), (0, 0, w, h))
             c = Counter(hnd.history)
             r = c.most_common(1)[0][0]
-            for i in range(10):
-                x = 0
-                y = 0 + 30 * i
 
-                clr = (0,200,0) if i == r else (255,255,255)
+            if HAVE_PYGAME:
+                for ev in pygame.event.get():
+                    if ev.type == QUIT or (ev.type == KEYDOWN and ev.unicode == 'q'):
+                        raise KeyboardInterrupt()
+                    elif ev.type == KEYDOWN:
+                        if 48 <= ev.key < 58:
+                            hnd.recording = ev.key - 48
+                        elif ev.unicode == 'r':
+                            hnd.cl.read_data()
+                    elif ev.type == KEYUP:
+                        if 48 <= ev.key < 58:
+                            hnd.recording = -1
 
-                txt = font.render('%5d' % (hnd.cl.Y == i).sum(), True, (255,255,255))
-                scr.blit(txt, (x + 20, y))
+                scr.fill((0, 0, 0), (0, 0, w, h))
 
-                txt = font.render('%d' % i, True, clr)
-                scr.blit(txt, (x + 110, y))
+                for i in range(10):
+                    x = 0
+                    y = 0 + 30 * i
+
+                    clr = (0,200,0) if i == r else (255,255,255)
+
+                    txt = font.render('%5d' % (hnd.cl.Y == i).sum(), True, (255,255,255))
+                    scr.blit(txt, (x + 20, y))
+
+                    txt = font.render('%d' % i, True, clr)
+                    scr.blit(txt, (x + 110, y))
 
 
-                scr.fill((0,0,0), (x+130, y + txt.get_height() / 2 - 10, len(hnd.history) * 20, 20))
-                scr.fill(clr, (x+130, y + txt.get_height() / 2 - 10, c[i] * 20, 20))
+                    scr.fill((0,0,0), (x+130, y + txt.get_height() / 2 - 10, len(hnd.history) * 20, 20))
+                    scr.fill(clr, (x+130, y + txt.get_height() / 2 - 10, c[i] * 20, 20))
 
-            pygame.display.flip()
+                pygame.display.flip()
+            else:
+                for i in range(10):
+                    if i == r: sys.stdout.write('\x1b[32m')
+                    print(i, '-' * c[i], '\x1b[K')
+                    if i == r: sys.stdout.write('\x1b[m')
+                sys.stdout.write('\x1b[11A')
+                print()
 
     except KeyboardInterrupt:
         pass
@@ -144,4 +155,5 @@ if __name__ == '__main__':
         m.disconnect()
         print()
 
-    pygame.quit()
+    if HAVE_PYGAME:
+        pygame.quit()
