@@ -73,3 +73,13 @@ Tips for classification:
 - try moving your hand around a little in the pose while recording data to give
   the program a more flexible idea of what the pose is
 - the rest pose needs to be trained as a pose in itself
+
+# Caveats/issues
+
+- currently untested on Mac
+- on Windows, the readings become more and more delayed as time goes on
+- doesn't have access to Thalmic's pose recognition
+- may or may not work with a Myo that has never been plugged in and set up with
+  Myo Connect
+- classify_myo.py segfaults on exit under certain circumstances (probably
+  related to Pygame version)
