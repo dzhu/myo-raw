@@ -6,6 +6,7 @@ import threading
 import time
 
 import serial
+from serial.tools.list_ports import comports
 
 def pack(fmt, *args):
     return struct.pack('<' + fmt, *args)
@@ -137,10 +138,22 @@ class BT(object):
 class Myo(object):
     '''Implements the Myo-specific communication protocol.'''
 
-    def __init__(self, tty):
+    def __init__(self, tty=None):
+        if tty is None:
+            tty = self.detect_tty()
+        if tty is None:
+            raise ValueError('Myo dongle not found!')
+
         self.bt = BT(tty)
         self.emg_handlers = []
         self.imu_handlers = []
+
+    def detect_tty(self):
+        for p in comports():
+            if 'PID=2458:0001' in p[2]:
+                return p[0]
+
+        return None
 
     def run(self):
         self.bt.recv_packet()
@@ -279,7 +292,7 @@ if __name__ == '__main__':
     w, h = 1200, 400
     scr = pygame.display.set_mode((w, h))
 
-    m = Myo(sys.argv[1])
+    m = Myo(sys.argv[1] if len(sys.argv) >= 2 else None)
 
     def proc_emg(emg, moving, times=[]):
         ## update pygame display

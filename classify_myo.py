@@ -90,7 +90,7 @@ if __name__ == '__main__':
     w, h = 1200, 400
     scr = pygame.display.set_mode((w, h))
 
-    m = myo.Myo(sys.argv[1])
+    m = myo.Myo(sys.argv[1] if len(sys.argv) >= 2 else None)
     hnd = Handler(Classifier())
 
     m.add_emg_handler(hnd)
