@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from collections import defaultdict
 import struct
+import sys
 import threading
 import time
 
@@ -13,17 +14,29 @@ def pack(fmt, *args):
 def unpack(fmt, *args):
     return struct.unpack('<' + fmt, *args)
 
+def multichr(ords):
+    if sys.version_info[0] >= 3:
+        return bytes(ords)
+    else:
+        return ''.join(map(chr, ords))
+
+def multiord(b):
+    if sys.version_info[0] >= 3:
+        return list(b)
+    else:
+        return map(ord, b)
+
 class Packet(object):
     def __init__(self, ords):
         self.typ = ords[0]
         self.cls = ords[2]
         self.cmd = ords[3]
-        self.payload = ''.join(map(chr, ords[4:]))
+        self.payload = multichr(ords[4:])
 
     def __repr__(self):
         return 'Packet(%02X, %02X, %02X, [%s])' % \
             (self.typ, self.cls, self.cmd,
-             ' '.join('%02X' % ord(c) for c in self.payload))
+             ' '.join('%02X' % b for b in multiord(self.payload)))
 
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
@@ -99,13 +112,13 @@ class BT(object):
 
     ## specific BLE commands
     def connect(self, addr):
-        return self.send_command(6, 3, pack('6sBHHHH', ''.join(map(chr, addr)), 0, 6, 6, 64, 0))
+        return self.send_command(6, 3, pack('6sBHHHH', multichr(addr), 0, 6, 6, 64, 0))
 
     def get_connections(self):
         return self.send_command(0, 6)
 
     def discover(self):
-        return self.send_command(6, 2, '\x01')
+        return self.send_command(6, 2, b'\x01')
 
     def end_scan(self):
         return self.send_command(6, 4)
@@ -121,7 +134,7 @@ class BT(object):
         self.send_command(4, 5, pack('BHB', con, attr, len(val)) + val)
         return self.wait_event(4, 1)
 
-    def send_command(self, cls, cmd, payload='', wait_resp=True):
+    def send_command(self, cls, cmd, payload=b'', wait_resp=True):
         s = pack('4B', 0, len(payload), cls, cmd) + payload
         self.ser.write(s)
 
@@ -171,14 +184,14 @@ class Myo(object):
         while True:
             p = self.bt.recv_packet()
             print('scan response:', p)
-            if p.payload[15:] == '\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5':
-                addr = map(ord, p.payload[2:8])
+            if p.payload[15:] == b'\x06\x42\x48\x12\x4A\x7F\x2C\x48\x47\xB9\xDE\x04\xA9\x01\x00\x06\xD5':
+                addr = list(multiord(p.payload[2:8]))
                 break
         self.bt.end_scan()
 
         ## connect and wait for status event
         conn_pkt = self.bt.connect(addr)
-        self.conn = ord(conn_pkt.payload[-1])
+        self.conn = multiord(conn_pkt.payload)[-1]
         self.bt.wait_event(3, 0)
 
         ## get firmware version
@@ -188,16 +201,16 @@ class Myo(object):
 
         ## don't know what these do; Myo Connect sends them, though we get data
         ## fine without them
-        self.bt.write_attr(self.conn, 0x19, '\x01\x02\x00\x00')
-        self.bt.write_attr(self.conn, 0x2f, '\x01\x00')
-        self.bt.write_attr(self.conn, 0x2c, '\x01\x00')
-        self.bt.write_attr(self.conn, 0x32, '\x01\x00')
-        self.bt.write_attr(self.conn, 0x35, '\x01\x00')
+        self.bt.write_attr(self.conn, 0x19, b'\x01\x02\x00\x00')
+        self.bt.write_attr(self.conn, 0x2f, b'\x01\x00')
+        self.bt.write_attr(self.conn, 0x2c, b'\x01\x00')
+        self.bt.write_attr(self.conn, 0x32, b'\x01\x00')
+        self.bt.write_attr(self.conn, 0x35, b'\x01\x00')
 
         ## enable EMG data
-        self.bt.write_attr(self.conn, 0x28, '\x01\x00')
+        self.bt.write_attr(self.conn, 0x28, b'\x01\x00')
         ## enable IMU data
-        self.bt.write_attr(self.conn, 0x1d, '\x01\x00')
+        self.bt.write_attr(self.conn, 0x1d, b'\x01\x00')
 
         ## Sampling rate of the underlying EMG sensor, capped to 1000. If it's
         ## less than 1000, emg_hz is correct. If it is greater, the actual
@@ -212,7 +225,7 @@ class Myo(object):
         imu_hz = 50
 
         ## send sensor parameters, or we don't get any data
-        self.bt.write_attr(self.conn, 0x19, pack('BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C / emg_hz, imu_hz, 0, 0))
+        self.bt.write_attr(self.conn, 0x19, pack('BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
 
         ## add data handlers
         def handle_data(p):
@@ -285,7 +298,6 @@ def plot(scr, vals):
     last_vals = vals
 
 if __name__ == '__main__':
-    import sys
     import pygame
     from pygame.locals import *
 
@@ -315,7 +327,7 @@ if __name__ == '__main__':
                 if ev.type == KEYDOWN:
                     if 49 <= ev.key < 52:
                         m.vibrate(ev.key - 48)
-                elif ev.type == QUIT: raise Exception()
+                elif ev.type == QUIT: raise KeyboardInterrupt()
 
     except KeyboardInterrupt:
         pass

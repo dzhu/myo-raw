@@ -29,11 +29,11 @@ def unpack(fmt, *args):
 class Classifier(object):
     def __init__(self):
         for i in range(10):
-            with open('vals%d.dat' % i, 'a') as f: pass
+            with open('vals%d.dat' % i, 'ab') as f: pass
         self.read_data()
 
     def store_data(self, cls, vals):
-        with open('vals%d.dat' % cls, 'a') as f:
+        with open('vals%d.dat' % cls, 'ab') as f:
             f.write(pack('8H', *vals))
 
         self.X = np.vstack([self.X, vals])

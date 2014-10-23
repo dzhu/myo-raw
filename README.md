@@ -16,7 +16,8 @@ understanding the protocol.
 
 - python >=2.6
 - pySerial
-- numpy and pygame, for the example visualization and classifier program
+- pygame, for the example visualization and classifier program
+- numpy, for the classifier program
 - sklearn, for a more efficient classifier (and easy access to smarter classifiers)
 
 
