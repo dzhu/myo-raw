@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from collections import defaultdict
+import re
 import struct
 import sys
 import threading
@@ -163,7 +164,7 @@ class Myo(object):
 
     def detect_tty(self):
         for p in comports():
-            if 'PID=2458:0001' in p[2]:
+            if re.search(r'PID=2458:0*1', p[2]):
                 return p[0]
 
         return None
