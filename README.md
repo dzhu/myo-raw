@@ -28,12 +28,14 @@ corresponding to the Myo dongle. The programs will attempt to detect it
 automatically, but if that doesn't work, here's how to find it out manually:
 
 - Linux: Run the command `ls /dev/ttyACM*`. One of the names it prints (there
-will probably only be one) is the device. Try them each if there are multiple,
-or unplug the dongle and see which one disappears if you run the command again.
+  will probably only be one) is the device. Try them each if there are multiple,
+  or unplug the dongle and see which one disappears if you run the command
+  again. If you get a permissions error, running `sudo usermod -aG dialout
+  $USER` will probably fix it.
 
 - Windows: Open Device Manager (run `devmgmt.msc`) and look under "Ports (COM &
-LPT)". Find a device whose name includes "Bluegiga". The name you need is in
-parentheses at the end of the line (it will be "COM" followed by a number).
+  LPT)". Find a device whose name includes "Bluegiga". The name you need is in
+  parentheses at the end of the line (it will be "COM" followed by a number).
 
 - Mac: Same as Linux, replacing `ttyACM` with `tty.usb`. (Probably.)
 

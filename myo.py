@@ -165,6 +165,7 @@ class Myo(object):
     def detect_tty(self):
         for p in comports():
             if re.search(r'PID=2458:0*1', p[2]):
+                print('using device:', p[0])
                 return p[0]
 
         return None
