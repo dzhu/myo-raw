@@ -341,8 +341,10 @@ if __name__ == '__main__':
                     if ev.type == QUIT or (ev.type == KEYDOWN and ev.unicode == 'q'):
                         raise KeyboardInterrupt()
                     elif ev.type == KEYDOWN:
-                        if 49 <= ev.key < 52:
-                            m.vibrate(ev.key - 48)
+                        if K_1 <= ev.key <= K_3:
+                            m.vibrate(ev.key - K_0)
+                        if K_KP1 <= ev.key <= K_KP3:
+                            m.vibrate(ev.key - K_KP0)
 
     except KeyboardInterrupt:
         pass

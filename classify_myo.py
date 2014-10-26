@@ -57,12 +57,14 @@ if __name__ == '__main__':
                     if ev.type == QUIT or (ev.type == KEYDOWN and ev.unicode == 'q'):
                         raise KeyboardInterrupt()
                     elif ev.type == KEYDOWN:
-                        if 48 <= ev.key < 58:
-                            hnd.recording = ev.key - 48
+                        if K_0 <= ev.key <= K_9:
+                            hnd.recording = ev.key - K_0
+                        elif K_KP0 <= ev.key <= K_KP9:
+                            hnd.recording = ev.key - K_Kp0
                         elif ev.unicode == 'r':
                             hnd.cl.read_data()
                     elif ev.type == KEYUP:
-                        if 48 <= ev.key < 58:
+                        if K_0 <= ev.key <= K_9 or K_KP0 <= ev.key <= K_KP9:
                             hnd.recording = -1
 
                 scr.fill((0, 0, 0), (0, 0, w, h))
