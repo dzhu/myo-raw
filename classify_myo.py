@@ -13,6 +13,13 @@ try:
 except ImportError:
     HAVE_SK = False
 
+try:
+    import pygame
+    from pygame.locals import *
+    HAVE_PYGAME = True
+except ImportError:
+    HAVE_PYGAME = False
+
 from common import *
 import myo
 
@@ -28,13 +35,6 @@ class EMGHandler(object):
             self.m.cls.store_data(self.recording, emg)
 
 if __name__ == '__main__':
-    try:
-        import pygame
-        from pygame.locals import *
-        HAVE_PYGAME = True
-    except ImportError:
-        HAVE_PYGAME = False
-
     if HAVE_PYGAME:
         pygame.init()
         w, h = 800, 320
@@ -85,10 +85,11 @@ if __name__ == '__main__':
                     scr.fill((0,0,0), (x+130, y + txt.get_height() / 2 - 10, len(m.history) * 20, 20))
                     scr.fill(clr, (x+130, y + txt.get_height() / 2 - 10, m.history_cnt[i] * 20, 20))
 
-                dists, inds = m.cls.nn.kneighbors(hnd.emg)
-                for i, (d, ind) in enumerate(zip(dists[0], inds[0])):
-                    y = m.cls.Y[3*ind]
-                    text(scr, font, '%d %6d' % (y, d), (650, 20 * i))
+                if HAVE_SK:
+                    dists, inds = m.cls.nn.kneighbors(hnd.emg)
+                    for i, (d, ind) in enumerate(zip(dists[0], inds[0])):
+                        y = m.cls.Y[3*ind]
+                        text(scr, font, '%d %6d' % (y, d), (650, 20 * i))
 
                 pygame.display.flip()
             else:
