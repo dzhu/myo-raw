@@ -60,7 +60,7 @@ class Packet(object):
 class BT(object):
     '''Implements the non-Myo-specific details of the Bluetooth protocol.'''
     def __init__(self, tty):
-        self.ser = serial.Serial(port=tty, baudrate=9600)
+        self.ser = serial.Serial(port=tty, baudrate=9600, dsrdtr=1)
         self.buf = []
         self.lock = threading.Lock()
         self.handlers = []
