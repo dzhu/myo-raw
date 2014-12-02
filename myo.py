@@ -15,6 +15,8 @@ except ImportError:
 from common import *
 from myo_raw import MyoRaw
 
+SUBSAMPLE = 3
+K = 15
 
 class NNClassifier(object):
     '''A wrapper for sklearn's nearest-neighbor classifier that stores
@@ -43,8 +45,9 @@ class NNClassifier(object):
     def train(self, X, Y):
         self.X = X
         self.Y = Y
-        if HAVE_SK and self.X.shape[0] >= 20:
-            self.nn = neighbors.KNeighborsClassifier(n_neighbors=15, algorithm='kd_tree').fit(self.X[::3], self.Y[::3])
+        if HAVE_SK and self.X.shape[0] >= K * SUBSAMPLE:
+            self.nn = neighbors.KNeighborsClassifier(n_neighbors=K, algorithm='kd_tree')
+            self.nn.fit(self.X[::SUBSAMPLE], self.Y[::SUBSAMPLE])
         else:
             self.nn = None
 
@@ -54,8 +57,8 @@ class NNClassifier(object):
         return self.Y[ind]
 
     def classify(self, d):
-        if self.X.shape[0] < 20: return 0
-        if self.nn is None: return self.nearest(d)
+        if self.X.shape[0] < K * SUBSAMPLE: return 0
+        if not HAVE_SK: return self.nearest(d)
         return int(self.nn.predict(d)[0])
 
 
